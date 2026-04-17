@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"text/template"
+
 	// "text/template"
 
 	"github.com/slikhithreddy22/snippetbox/internal/models"
@@ -43,7 +45,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 
 func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.PathValue("id"))
-	if err != nil || id < 0 {
+	if err != nil || id < 1 {
 		http.NotFound(w, r)
 		return
 	}
@@ -57,7 +59,21 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	fmt.Fprintf(w, "The snippet of id was : %+v", snippet)
+	files := []string{
+		"ui/html/base.html",
+		"ui/html/pages/view.html",
+		"ui/html/partials/nav.html",
+	}
+
+	ts, err := template.ParseFiles(files...)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+	err = ts.ExecuteTemplate(w, "base", snippet)
+	if err != nil {
+		app.serverError(w, r, err)
+	}
 }
 
 func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
